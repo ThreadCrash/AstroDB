@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AstroDB Studio</title><style>
+:root{color-scheme:dark;font-family:Arial,sans-serif;background:#11130f;color:#f2f4e9}*{box-sizing:border-box}body{max-width:1180px;margin:0 auto;padding:35px 24px}header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #30352a;padding-bottom:24px}h1{font-size:26px;margin:0;letter-spacing:-1px}h1 span{color:#ccff70}p{color:#a4ad98;font-size:13px;line-height:1.7}select,button,textarea{font:inherit;border-radius:5px;border:1px solid #435237}select{padding:10px;background:#202719;color:#f2f4e9}textarea{display:block;width:100%;min-height:240px;background:#171e12;color:#d8edbe;font:15px/1.8 Consolas,monospace;padding:22px;resize:vertical;margin-top:25px}button{background:#ccff70;color:#17200c;padding:11px 20px;cursor:pointer}.actions{display:flex;align-items:center;justify-content:space-between;margin:16px 0}#status{font:12px Consolas,monospace;color:#a4ad98}.table-wrap{overflow:auto;border:1px solid #30352a;border-radius:6px;margin-top:24px}table{border-collapse:collapse;width:100%;font:13px Consolas,monospace;text-align:left}th,td{padding:12px 18px;border-bottom:1px solid #30352a;white-space:pre-wrap}th{color:#ccff70;background:#202719}#error{color:#ffa49b;white-space:pre-wrap}.badge{font-size:11px;color:#ccff70}a{color:#ccff70}button:disabled{opacity:.5}label{font-size:12px;margin-right:10px}
+</style></head><body><header><h1><span>✳</span> AstroDB Studio</h1><span class="badge">LOCAL WORKSPACE / ALPHA</span></header><p>Your SQL, on your machine. Each engine has its own in-memory database. Data lasts until you stop Studio.</p><label for="engine">Engine</label><select id="engine"><option value="duckdb">DuckDB · analytics</option><option value="sqlite">SQLite · databases</option></select><textarea id="sql" aria-label="SQL query" spellcheck="false">SELECT 'Hello from AstroDB' AS message, 42 AS answer;</textarea><div class="actions"><span id="status" aria-live="polite">Ready</span><button id="run">Run SQL ↗</button></div><pre id="error" role="alert"></pre><div class="table-wrap"><table id="results" aria-label="Query results"></table></div><p>DuckDB supports multiple statements; SQLite executes one statement at a time.<br>DuckDB can query local CSV and Parquet files using their file paths. <a href="https://github.com/ThreadCrash/AstroDB">Project source ↗</a></p><script>
+document.querySelector('#run').addEventListener('click', async () => {
+  const run = document.querySelector('#run');
+  run.disabled = true;
+  document.querySelector('#error').textContent = '';
+  document.querySelector('#status').textContent = 'Running…';
+  try {
+    const response = await fetch('/query', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({engine:document.querySelector('#engine').value,sql:document.querySelector('#sql').value})});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    const table = document.querySelector('#results');
+    table.replaceChildren();
+    const head = table.createTHead().insertRow();
+    for (const name of data.columns) {const th = document.createElement('th');th.scope='col';th.textContent=name;head.append(th);}
+    const body = table.createTBody();
+    for (const values of data.rows) {const row = body.insertRow();for (const value of values) row.insertCell().textContent=value === null ? 'NULL' : typeof value === 'object' ? JSON.stringify(value) : String(value);}
+    document.querySelector('#status').textContent = data.columns.length ? data.rows.length + ' rows returned' : 'Statement complete';
+  } catch(error) {document.querySelector('#error').textContent=error.message;document.querySelector('#status').textContent='Query failed';}
+  finally {run.disabled=false;}
+});
+</script></body></html>

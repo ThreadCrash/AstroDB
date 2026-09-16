@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astrodb-workspace"
+version = "0.1.0"
+description = "A local SQL workspace for DuckDB and SQLite"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = ["duckdb>=1.4,<3"]
+
+[project.scripts]
+astrodb = "astrodb.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+astrodb = ["studio.html"]
