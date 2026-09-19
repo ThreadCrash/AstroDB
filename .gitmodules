@@ -1,0 +1,10 @@
+[submodule "desktop"]
+	path = desktop
+	url = https://github.com/ThreadCrash/sqlitebrowser-forked.git
+	branch = astrodb
+	shallow = true
+[submodule "engine"]
+	path = engine
+	url = https://github.com/ThreadCrash/duckdb.git
+	branch = astrodb
+	shallow = true

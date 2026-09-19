@@ -12,7 +12,7 @@ license = "MIT"
 dependencies = ["duckdb>=1.4,<3"]
 
 [project.scripts]
-astrodb = "astrodb.cli:main"
+astrodb-python = "astrodb.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

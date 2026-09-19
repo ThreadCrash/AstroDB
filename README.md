@@ -1,77 +1,65 @@
 # AstroDB
 
-A local SQL workspace powered by DuckDB and SQLite.
+AstroDB is a local SQL database distribution with a native command-line shell and desktop application.
 
-AstroDB provides a branded command-line interface, a local visual query workspace, and a website. It uses the existing engines without changing their SQL dialects or file formats. This is an early implementation, not a new database engine.
+The analytical engine is built from our DuckDB fork. The desktop application is built from our DB Browser for SQLite fork, with an AstroDB SQL window linked directly to the native engine.
 
-## Install
-
-Requires Python 3.10 or newer.
+## Command line
 
 ```sh
-git clone https://github.com/ThreadCrash/AstroDB.git
+astrodb example.astrodb
+astrodb example.astrodb -c "CREATE TABLE numbers AS SELECT * FROM range(10);"
+astrodb example.astrodb -c "SELECT SUM(range) FROM numbers;"
+astrodb -c "SELECT * FROM read_csv('sales.csv');"
+astrodb -c "SELECT * FROM 'data.parquet';"
+```
+
+The shell uses `.astrodbrc` and `.astrodb_history` in your home directory. `ASTRODB_HISTORY` overrides the history path. Use `astrodb -help` for options.
+
+## Desktop
+
+Launch **AstroDB Desktop.exe**. The main window opens and edits SQLite databases, including tables, indexes, CSV imports, and SQL queries.
+
+Choose **Tools > AstroDB SQL** for analytical queries. This window opens or creates `.astrodb` databases and queries CSV and Parquet files. SQL runs on a worker thread and can be cancelled. Results show up to 1,000 rows. Transactions and temporary tables persist between queries in the same window.
+
+AstroDB files use the DuckDB database format. SQLite files remain SQLite files. The two query windows use their respective SQL dialects; opening a file does not convert its format.
+
+## Build on Windows
+
+Prerequisites:
+
+- Visual Studio with the C++ desktop workload and Windows SDK.
+- CMake on PATH.
+- Qt 6 with Core5Compat and Qt tools. This build uses Qt 6.8.3 for MSVC 2022.
+- Python 3 for downloading and verifying the SQLite source archive during the build.
+
+```powershell
+git clone --recurse-submodules https://github.com/ThreadCrash/AstroDB.git
 cd AstroDB
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS / Linux
-# source .venv/bin/activate
-python -m pip install -e .
+./scripts/build_windows.ps1 -QtRoot "C:/Qt/6.8.3/msvc2022_64"
 ```
 
-## Visual workspace
+The default generator is Visual Studio 2026. Pass `-Generator "Visual Studio 17 2022"` for Visual Studio 2022. `-Jobs` controls parallel compilation.
 
-```sh
-astrodb studio
-```
+The script builds the engine, SQLite, and the desktop application, runs native tests, and places the portable application in `releases/AstroDB/`.
 
-Open http://127.0.0.1:8042. Select DuckDB or SQLite, enter SQL, and run it. Each engine uses a separate in-memory database that lasts until Studio stops. SQLite transactions in Studio remain open until you explicitly run `COMMIT` or `ROLLBACK`.
-
-Studio is a local development tool with access to files available to your account through SQL. It is bound to localhost and is not intended to be exposed as a network service.
-
-## Query a database
-
-```sh
-astrodb query "SELECT 42 AS answer;"
-astrodb query "SELECT * FROM read_csv('data.csv');" --format json
-astrodb query "SELECT * FROM read_parquet('data.parquet');" --format csv
-astrodb query "CREATE TABLE sample (answer INTEGER);" --database demo.astrodb
-astrodb query "INSERT INTO sample VALUES (42);" --database demo.astrodb
-astrodb query "SELECT * FROM sample;" --database demo.astrodb --read-only
-astrodb query "SELECT sqlite_version();" --engine sqlite
-astrodb query "SELECT * FROM sample;" --engine sqlite --database demo.sqlite
-astrodb query --file query.sql --database demo.astrodb
-```
-
-SQLite accepts one statement per query. DuckDB and SQLite have different dialects and database formats; selecting another engine does not convert a database. JSON output represents date/time and other non-JSON values as strings.
-
-## Python
-
-```python
-from astrodb import Database
-
-with Database("demo.astrodb") as db:
-    columns, rows = db.query("SELECT 42 AS answer")
-```
-
-SQLite changes commit on a successful context exit and roll back on an exception.
+The engine source is a development snapshot, pinned by the engine submodule. Its reported engine version is v2.0.0; the AstroDB distribution version is 0.1.0. This is a development build.
 
 ## Website
 
-Serve `website/` with any static server:
+The static website is in `website/`. Run `python scripts/update_website.py` to write a self-contained HTML copy to `../Website/AstroDB.html`.
+
+## Optional Python interface
 
 ```sh
-python -m http.server 8765 --directory website
-```
-
-The landing page's interactive example is a predefined browser preview. Studio executes real SQL.
-
-## Development
-
-```sh
+python -m pip install -e .
+astrodb-python query "SELECT 42;"
+astrodb-python studio
 python -m unittest discover -s tests -v
 ```
 
-The supplied DuckDB fork and DB Browser for SQLite fork are not vendored or rebranded in this release. The latter is a desktop browser, not a SQL engine. Integrating that Qt codebase and producing native installers remain future work.
+The Python interface uses the installed DuckDB Python package and Python's SQLite module. It is separate from the native engine build.
 
-AstroDB branding and interface are independent of DuckDB and DB Browser for SQLite. See [third-party notices](THIRD_PARTY_NOTICES.md) for origins and licensing.
+## Licensing
+
+Licenses apply per component. AstroDB's original Python and website code use MIT. The native engine retains DuckDB's MIT license. The desktop code retains its existing MPL 2.0 and GPL 3.0 licensing and third-party notices. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

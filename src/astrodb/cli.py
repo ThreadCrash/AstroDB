@@ -27,7 +27,7 @@ def print_result(columns, rows, output):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog="astrodb", description="AstroDB: local SQL with DuckDB or SQLite")
+    parser = argparse.ArgumentParser(prog="astrodb-python", description="AstroDB Python interface for DuckDB and SQLite")
     subcommands = parser.add_subparsers(dest="command", required=True)
     studio = subcommands.add_parser("studio", help="Open the local visual SQL workspace")
     studio.add_argument("--port", type=int, default=8042)
